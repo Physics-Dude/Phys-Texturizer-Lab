@@ -3606,10 +3606,32 @@ local function GeneratePixelData(useCustom)
 	
 	-- iend
     local iend = string.char(0, 0, 0, 0, 73, 69, 78, 68, 174, 66, 96, 130)
-
+	
     return header .. ihdr .. idat .. iend
 end
 
+--open and uncompress the data so we can edit it later
+local function ExtractTextFromFile(fileName)
+    local fileSize = file.Size(fileName, "DATA")
+	
+    if fileSize < 1024 then 
+        local fileContents = file.Read(fileName, "DATA")
+        local startIndex, endIndex = string.find(fileContents, "IDAT(.-)IEND") 
+		
+        if startIndex and endIndex then 
+            local foundCompressedPixelData = string.sub(fileContents, startIndex + 4, endIndex - 3) 
+			local uncompressedIDAT = LibDeflate.DecompressZlib("",foundCompressedPixelData)
+			fullArray = {}
+			
+			for i = 1, #uncompressedIDAT do
+				local byteValue = string.byte(uncompressedIDAT, i)
+				table.insert(fullArray, byteValue)
+			end
+        end
+    end
+end
+
+--make da file
 local function saveAndSetTexture(useCustom)
     local currentTime = os.date("%Y%m%d_%H-%M-%S")
     local baseFileName = "lab_" .. tostring(currentTime) .. ".png"
@@ -3675,6 +3697,7 @@ local function OpenFileBrowser()
 
             imagePanel.DoClick = function()
                 RunConsoleCommand("pp_texturize", "data/" .. folderInData .. fileName)
+                ExtractTextFromFile(folderInData .. fileName)
             end
             imagePanel.DoRightClick = function()
                 f:SetTitle(baseTitle .. " (added file " .. fileName .. " to clipboard.)")
