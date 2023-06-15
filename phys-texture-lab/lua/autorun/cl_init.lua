@@ -3726,7 +3726,7 @@ local function OpenColorPicker()
     colorPanelOpen = true
 	
     local frame = vgui.Create("DFrame")
-    frame:SetSize(790, 320)
+    frame:SetSize(790, 321)
 	frame:SetScreenLock(true)
 	frame:SetPos( oldColorPanelPosX, oldColorPanelPosY )
 	if oldColorPanelPosX + oldColorPanelPosY == 0 then frame:Center() end
@@ -3791,7 +3791,6 @@ local function OpenColorPicker()
         staticLabel:SetSize(80, 100)
         staticLabel:SetColor(Color(200,200,200))
 		
-		
         -- Color cube
         local colorCube = vgui.Create("DColorCube", frame)
         colorCube:SetPos(x, 30)
@@ -3815,6 +3814,107 @@ local function OpenColorPicker()
             DColorButton:SetText(spare .. math.Round(12.5 * i, 1) .. "%")
         end
         DColorButton:SetColor(Color(smallerTables[i][2], smallerTables[i][3], smallerTables[i][4]))
+		
+		--show raw rgb inputs if clicked
+		DColorButton.DoClick = function()
+			-- Create a popup frame
+			local popupFrame = vgui.Create("DFrame")
+			popupFrame:SetSize(160, 180)
+			--popupFrame:Center()
+			-- Get the current mouse position
+			local mouseX, mouseY = input.GetCursorPos()
+			local popupX = mouseX - 80
+			local popupY = mouseY - 160
+			popupFrame:SetPos( popupX, popupY )
+			popupFrame:SetScreenLock(true)
+			popupFrame:SetTitle("Color " .. i)
+			popupFrame:SetVisible(true)
+			popupFrame:MakePopup()  
+
+			-- Create labels for red, green, and blue
+			local redLabel = vgui.Create("DLabel", popupFrame)
+			redLabel:SetPos(20, 40)
+			redLabel:SetSize(60, 20)
+			redLabel:SetText("Red:")
+
+			local greenLabel = vgui.Create("DLabel", popupFrame)
+			greenLabel:SetPos(20, 70)
+			greenLabel:SetSize(60, 20)
+			greenLabel:SetText("Green:")
+
+			local blueLabel = vgui.Create("DLabel", popupFrame)
+			blueLabel:SetPos(20, 100)
+			blueLabel:SetSize(60, 20)
+			blueLabel:SetText("Blue:")
+
+			-- Create three DNumberWang elements
+			local redInput = vgui.Create("DNumberWang", popupFrame)
+			redInput:SetPos(80, 40)
+			redInput:SetSize(60, 20)
+			redInput:SetMinMax(0,255)
+			redInput:SetValue(colorCubes[i]:GetRGB().r)
+
+			local greenInput = vgui.Create("DNumberWang", popupFrame)
+			greenInput:SetPos(80, 70)
+			greenInput:SetSize(60, 20)
+			greenInput:SetMinMax(0,255)
+			greenInput:SetValue(colorCubes[i]:GetRGB().g)
+
+			local blueInput = vgui.Create("DNumberWang", popupFrame)
+			blueInput:SetPos(80, 100)
+			blueInput:SetSize(60, 20)
+			blueInput:SetMinMax(0,255)
+			blueInput:SetValue(colorCubes[i]:GetRGB().b)
+
+			-- Create an OK button
+			local okBtn = vgui.Create("DButton", popupFrame)
+			okBtn:SetPos(20, 130)
+			okBtn:SetSize(120, 40)
+			okBtn:SetText("OK")
+			okBtn.DoClick = function()
+				local red = math.Clamp(redInput:GetValue(), 0, 255)
+				local green = math.Clamp(greenInput:GetValue(), 0, 255)
+				local blue = math.Clamp(blueInput:GetValue(), 0, 255)
+				
+				fullArray = {}
+				for j = 1, 8 do
+					if j == i then
+						table.insert(fullArray, 0)
+						table.insert(fullArray, red)
+						table.insert(fullArray, green)
+						table.insert(fullArray, blue)
+					else
+						table.insert(fullArray, 0)
+						table.insert(fullArray, colorCubes[j]:GetRGB().r)
+						table.insert(fullArray, colorCubes[j]:GetRGB().g)
+						table.insert(fullArray, colorCubes[j]:GetRGB().b)
+					end
+				end
+				
+				popupFrame:Close()
+				frame:Close()
+				OpenColorPicker()
+			end   
+			
+			-- Add focus change listener to close the popup when focus is lost
+			 popupFrame.OnFocusChanged = function(self, gained)
+				if not gained then
+					timer.Simple(0.1, function()
+						local hasFocus = false
+						for _, child in pairs(popupFrame:GetChildren()) do
+							if child:HasFocus() then
+								hasFocus = true
+								break
+							end
+						end
+
+						if not hasFocus then
+							popupFrame:Close()
+						end
+					end)
+				end
+			end
+		end
 
         -- Link the color cube and color picker
         rgbPicker.linkedCube = colorCube
@@ -3930,7 +4030,7 @@ local function OpenColorPicker()
 		
 		end
 	end
-		
+	
     -- Apply button
     local applyButton = vgui.Create("DButton", frame)
     applyButton:SetText("Apply")
@@ -3981,7 +4081,7 @@ local function OpenColorPicker()
 	staticLabel:SetPos(700, 190)
 	staticLabel:SetColor(Color(200,200,200))
 		
-    -- rotate R button
+    -- rotate L button
     local applyButton = vgui.Create("DButton", frame)
     applyButton:SetText("<<<")
     applyButton:SetPos(699, 210)
@@ -4064,7 +4164,12 @@ local function OpenColorPicker()
 		OpenColorPicker()
     end
 	
-
+    -- feature text
+	local staticLabel2 = Label(tostring("Hint: Click a color preview to manually set its RGB value."),frame)
+	staticLabel2:SetPos(10, 304) --220
+	staticLabel2:SetSize(600,16)
+	staticLabel2:SetColor(Color(200,200,200))
+	
     -- exit button
     local applyButton = vgui.Create("DButton", frame)
     applyButton:SetText("exit")
