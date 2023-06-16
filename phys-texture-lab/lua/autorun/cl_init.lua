@@ -58,7 +58,7 @@ local oldColorPanelPosX, oldColorPanelPosY = 0,0
 This addon uses code from LibDeflate 1.0.2-release to create the compressed zlib block in a png.
 https://github.com/SafeteeWoW/LibDeflate
 --
---[[--------------------------------------------------------------------------------------------------------------------------
+--]]--------------------------------------------------------------------------------------------------------------------------
 
 ---v--- collapse here ---v---
 local LibDeflate do 
